@@ -8,25 +8,46 @@ import EventCard from '../elements/EventCard';
 // 仮のイベントデータ
 const events = [
   {
-    title: 'ハッカソン2024',
+    title: 'ハッカソン2025',
     date: '2024年4月15日',
     description: '24時間でアイディアを形に！チーム開発の楽しさを体験しよう。',
     location: '大学内 イノベーションセンター',
-    imageUrl: '/images/hackathon.jpg'
+    imageUrl: ''
   },
   {
     title: 'プログラミング勉強会',
     date: '2024年4月20日',
     description: '初心者向けのプログラミング勉強会。Pythonの基礎から学べます。',
     location: '大学内 情報処理室',
-    imageUrl: '/images/study.jpg'
+    imageUrl: ''
   },
   {
     title: 'LT会',
     date: '2024年4月25日',
     description: '技術的な知見を共有するLT会。5分間のプレゼンテーション。',
     location: '大学内 セミナー室',
-    imageUrl: '/images/lt.jpg'
+    imageUrl: ''
+  },
+  {
+    title: 'デザイン思考ワークショップ',
+    date: '2024年5月1日',
+    description: 'ユーザー中心のデザインを学ぶワークショップ。プロトタイピングまで体験。',
+    location: '大学内 デザインスタジオ',
+    imageUrl: ''
+  },
+  {
+    title: '起業家セミナー',
+    date: '2024年5月10日',
+    description: '成功した起業家から学ぶ、ビジネスアイディアの実現方法。',
+    location: '大学内 大講義室',
+    imageUrl: ''
+  },
+  {
+    title: '技術展示会',
+    date: '2024年5月20日',
+    description: '学生の研究成果やプロジェクトを展示する技術展示会。',
+    location: '大学内 展示ホール',
+    imageUrl: ''
   }
 ];
 
