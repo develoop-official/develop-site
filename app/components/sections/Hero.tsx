@@ -21,11 +21,6 @@ const heroImages = [
   {
     src: '/images/heros/hero-3.png',
     alt: 'テーブルを囲んでの会話'
-  },
-  // テスト用の画像（確実に表示されるように）
-  {
-    src: '/images/test-hero.jpg',
-    alt: 'テスト用画像'
   }
 ];
 
