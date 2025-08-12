@@ -4,6 +4,7 @@
  */
 
 import Image from 'next/image';
+import { JSX } from 'react';
 
 interface EventCardProps {
   title: string;
@@ -18,7 +19,7 @@ interface EventCardProps {
  * @param {EventCardProps} props - イベントの情報
  * @returns {JSX.Element} イベントカードコンポーネント
  */
-const EventCard = ({ title, date, description, location, imageUrl }: EventCardProps) => {
+const EventCard = ({ title, date, description, location, imageUrl }: EventCardProps): JSX.Element => {
   return (
     <div className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow">
       {imageUrl ? (
