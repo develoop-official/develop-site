@@ -39,13 +39,16 @@ const Header = () => {
                 <Link href="/ideas" className="text-black hover:text-blue-600 font-medium">
                   アイディア
                 </Link>
-                <Link href="/about" className="text-black hover:text-blue-600 font-medium">
+                <Link href="/projects" className="text-black hover:text-blue-600 font-medium">
+                  プロジェクト
+                </Link>
+                <Link href="/aboutme" className="text-black hover:text-blue-600 font-medium">
                   サークルについて
                 </Link>
               </div>
             </div>
             <div className="bg-white rounded-full px-6 py-3 shadow-lg">
-              <Link href="/login" className="text-black hover:text-blue-600 font-medium">
+              <Link href="/auth/signin" className="text-black hover:text-blue-600 font-medium">
                 ログイン
               </Link>
             </div>

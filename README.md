@@ -25,6 +25,9 @@ develop-site/
 │  ├─ projects/
 │  │  ├─ page.tsx           # プロジェクト/進捗 一覧
 │  │  └─ create/page.tsx    # 進捗投稿
+|  ├─prodile
+│  │  └─ page.tsx           # 個人ページ
+|  |  
 │  ├─ not-found.tsx          # 404ページ
 │  ├─ layout.tsx
 │  ├─ page.tsx
