@@ -25,7 +25,7 @@ const Footer = () => {
               <img src="/logo-inverse.png" alt="ロゴ" className="mb-2 ml-0 w-48 h-48" />
             </Link>
           </div>
-          <div className="flex flex-row space-x-10 space-y-6">
+          <div className="grid grid-cols-1 md:flex-row space-y-8 md:space-y-4 md:space-x-6 md:grid-cols-2 lg:space-x-8 lg:grid-cols-3 xl:space-x-12">
             <div>
               <h3 className="text-xl font-bold mb-4">リンク</h3>
               <ul className="space-y-2">
@@ -61,7 +61,7 @@ const Footer = () => {
                 </li>
               </ul>
             </div>
-            <div>
+            <div className="space-y-4">
               <h3 className="text-xl font-bold mb-4">お問い合わせ</h3>
               <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between">
                 <div className="mb-4 sm:mb-0">
@@ -70,8 +70,7 @@ const Footer = () => {
                   </p>
                 </div>
               </div>
-            </div>
-            <div className="flex flex-row sm:flex-col space-x-4 sm:space-x-0 sm:space-y-2">
+              <div className="flex flex-row space-x-2">
               <a
                 href="https://discord.gg/xBvdd3Guak"
                 target="_blank"
@@ -90,6 +89,7 @@ const Footer = () => {
               >
                 <XIcon />
               </a>
+            </div>
             </div>
           </div>
         </div>
