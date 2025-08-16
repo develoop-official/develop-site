@@ -8,6 +8,7 @@
 import { JSX, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import ProtectedRoute from '../../components/auth/ProtectedRoute';
 
 /**
  * 進捗投稿ページコンポーネント
@@ -63,7 +64,8 @@ export default function CreateProjectPage(): JSX.Element {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <ProtectedRoute>
+      <div className="min-h-screen bg-gray-50">
       {/* ヘッダー */}
       <div className="bg-white shadow-sm border-b">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
@@ -255,5 +257,6 @@ Markdown形式で記述できます。`}
         </form>
       </div>
     </div>
+    </ProtectedRoute>
   );
 }

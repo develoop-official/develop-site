@@ -8,6 +8,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { auth } from '@/lib/supabase';
 
 /**
  * サインインページコンポーネント
@@ -17,11 +18,15 @@ export default function SignInPage() {
   const router = useRouter();
   const [formData, setFormData] = useState({
     email: '',
-    password: ''
+    password: '',
+    confirmPassword: ''
   });
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [errors, setErrors] = useState<{[key: string]: string}>({});
+  const [isSignUpMode, setIsSignUpMode] = useState(false);
 
   /**
    * フォームデータの更新処理
@@ -33,6 +38,26 @@ export default function SignInPage() {
       ...prev,
       [field]: value
     }));
+    
+    // エラーをクリア
+    if (errors[field]) {
+      setErrors(prev => ({
+        ...prev,
+        [field]: ''
+      }));
+    }
+  };
+
+  /**
+   * サインアップ/サインインモードの切り替え
+   */
+  const toggleMode = (newMode: boolean) => {
+    setIsSignUpMode(newMode);
+    // パスワード確認フィールドをクリア
+    setFormData(prev => ({
+      ...prev,
+      confirmPassword: ''
+    }));
   };
 
   /**
@@ -41,18 +66,71 @@ export default function SignInPage() {
    */
   const handleEmailSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // サインアップモードの場合はパスワード確認をチェック
+    if (isSignUpMode && formData.password !== formData.confirmPassword) {
+      alert('パスワードが一致しません。');
+      return;
+    }
+
+    // パスワードの長さチェック
+    if (isSignUpMode && formData.password.length < 6) {
+      alert('パスワードは6文字以上で入力してください。');
+      return;
+    }
+
     setIsSubmitting(true);
 
     try {
-      // TODO: Supabase Authでサインイン
-      console.log('サインイン試行:', formData);
+      if (isSignUpMode) {
+        // サインアップモード
+        const { data, error } = await auth.signUp(formData.email, formData.password);
+
+        if (error) {
+          throw error;
+        }
+
+        if (data.user) {
+          alert('アカウント作成が完了しました！確認メールをお送りしましたので、メール内のリンクをクリックしてアカウントを有効化してください。');
+          setIsSignUpMode(false); // サインインモードに戻す
+          setFormData({ email: formData.email, password: '', confirmPassword: '' }); // パスワードをクリア
+        }
+      } else {
+        // サインインモード
+        const { data, error } = await auth.signInWithPassword(formData.email, formData.password);
+
+        if (error) {
+          throw error;
+        }
+
+        if (data.user) {
+          console.log('サインイン成功:', data.user);
+          router.push('/');
+        }
+      }
+    } catch (error: any) {
+      console.error('認証エラー:', error);
       
-      // 成功時の処理
-      alert('サインインに成功しました！');
-      router.push('/');
-    } catch (error) {
-      console.error('サインインエラー:', error);
-      alert('サインインに失敗しました。もう一度お試しください。');
+      let errorMessage = isSignUpMode 
+        ? 'アカウント作成に失敗しました。もう一度お試しください。'
+        : 'サインインに失敗しました。もう一度お試しください。';
+      
+      if (error.message.includes('Invalid login credentials')) {
+        errorMessage = 'メールアドレスまたはパスワードが正しくありません。';
+        // アカウントが存在しない場合はサインアップを提案
+        if (!isSignUpMode) {
+          errorMessage += '\nアカウントをお持ちでない場合は、下の「アカウントを作成」をクリックしてください。';
+        }
+      } else if (error.message.includes('User already registered')) {
+        errorMessage = 'このメールアドレスは既に登録されています。サインインしてください。';
+        setIsSignUpMode(false); // サインインモードに切り替え
+      } else if (error.message.includes('Email not confirmed')) {
+        errorMessage = 'メールアドレスが確認されていません。確認メールをご確認ください。';
+      } else if (error.message.includes('Password should be')) {
+        errorMessage = 'パスワードは6文字以上で入力してください。';
+      }
+      
+      alert(errorMessage);
     } finally {
       setIsSubmitting(false);
     }
@@ -63,9 +141,14 @@ export default function SignInPage() {
    */
   const handleDiscordSignIn = async () => {
     try {
-      // TODO: Discord OAuth認証の実装
+      const { data, error } = await auth.signInWithDiscord();
+
+      if (error) {
+        throw error;
+      }
+
+      // OAuth認証はコールバックページで処理される
       console.log('Discord OAuth認証開始');
-      alert('Discord OAuth認証機能は準備中です');
     } catch (error) {
       console.error('Discord OAuthエラー:', error);
       alert('Discord認証に失敗しました。');
@@ -78,7 +161,9 @@ export default function SignInPage() {
         {/* ロゴ・タイトル */}
         <div className="text-center mb-8">
           <div className="text-4xl font-bold text-blue-600 mb-2">Develoop</div>
-          <h1 className="text-2xl font-semibold text-gray-900">サインイン</h1>
+          <h1 className="text-2xl font-semibold text-gray-900">
+            {isSignUpMode ? 'アカウント作成' : 'ログイン'}
+          </h1>
           <p className="text-gray-600 mt-2">
             プログラミングサークルの進捗管理アプリ
           </p>
@@ -94,7 +179,7 @@ export default function SignInPage() {
             <svg className="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 24 24">
               <path d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515a.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0a12.64 12.64 0 0 0-.617-1.25a.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 0 0 .031.057a19.9 19.9 0 0 0 5.993 3.03a.078.078 0 0 0 .084-.028a14.09 14.09 0 0 0 1.226-1.994a.076.076 0 0 0-.041-.106a13.107 13.107 0 0 1-1.872-.892a.077.077 0 0 1-.008-.128a10.2 10.2 0 0 0 .372-.292a.074.074 0 0 1 .077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.006.127a12.299 12.299 0 0 1-1.873.892a.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028a19.839 19.839 0 0 0 6.002-3.03a.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.03zM8.02 15.33c-1.183 0-2.157-1.085-2.157-2.419c0-1.333.956-2.419 2.157-2.419c1.21 0 2.176 1.096 2.157 2.42c0 1.333-.956 2.418-2.157 2.418zm7.975 0c-1.183 0-2.157-1.085-2.157-2.419c0-1.333.955-2.419 2.157-2.419c1.21 0 2.176 1.096 2.157 2.42c0 1.333-.946 2.418-2.157 2.418z"/>
             </svg>
-            Discordでサインイン
+            Discordで{isSignUpMode ? 'アカウント作成' : 'ログイン'}
           </button>
 
           {/* 区切り線 */}
@@ -136,7 +221,7 @@ export default function SignInPage() {
                   value={formData.password}
                   onChange={(e) => handleInputChange('password', e.target.value)}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent pr-10"
-                  placeholder="パスワードを入力"
+                  placeholder={isSignUpMode ? "パスワードを入力（6文字以上）" : "パスワードを入力"}
                 />
                 <button
                   type="button"
@@ -157,36 +242,91 @@ export default function SignInPage() {
               </div>
             </div>
 
+            {/* パスワード確認（サインアップモードのみ） */}
+            {isSignUpMode && (
+              <div>
+                <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700 mb-1">
+                  パスワード確認
+                </label>
+                <div className="relative">
+                  <input
+                    type={showConfirmPassword ? 'text' : 'password'}
+                    id="confirmPassword"
+                    required
+                    value={formData.confirmPassword}
+                    onChange={(e) => handleInputChange('confirmPassword', e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent pr-10"
+                    placeholder="パスワードを再入力"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                    className="absolute inset-y-0 right-0 pr-3 flex items-center"
+                  >
+                    {showConfirmPassword ? (
+                      <svg className="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.878 9.878L3 3m6.878 6.878L21 21" />
+                      </svg>
+                    ) : (
+                      <svg className="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                      </svg>
+                    )}
+                  </button>
+                </div>
+              </div>
+            )}
+
             <button
               type="submit"
               disabled={isSubmitting}
               className="w-full bg-blue-600 text-white py-3 px-4 rounded-lg font-semibold hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             >
-              {isSubmitting ? 'サインイン中...' : 'サインイン'}
+              {isSubmitting 
+                ? (isSignUpMode ? 'アカウント作成中...' : 'ログイン中...') 
+                : (isSignUpMode ? 'アカウント作成' : 'ログイン')
+              }
             </button>
           </form>
 
           {/* リンク */}
-          <div className="mt-6 text-center">
-            <Link
-              href="/auth/forgot-password"
-              className="text-sm text-blue-600 hover:text-blue-500"
-            >
-              パスワードを忘れた場合
-            </Link>
-          </div>
+          {!isSignUpMode && (
+            <div className="mt-6 text-center">
+              <Link
+                href="/auth/forgot-password"
+                className="text-sm text-blue-600 hover:text-blue-500"
+              >
+                パスワードを忘れた場合
+              </Link>
+            </div>
+          )}
         </div>
 
-        {/* サインアップリンク */}
+        {/* サインアップ/サインイン切り替え */}
         <div className="text-center mt-6">
           <p className="text-gray-600">
-            アカウントをお持ちでない方は{' '}
-            <Link
-              href="/auth/signup"
-              className="text-blue-600 hover:text-blue-500 font-medium"
-            >
-              サインアップ
-            </Link>
+            {isSignUpMode ? (
+              <>
+                すでにアカウントをお持ちの方は{' '}
+                <button
+                  onClick={() => toggleMode(false)}
+                  className="text-blue-600 hover:text-blue-500 font-medium underline"
+                >
+                  ログイン
+                </button>
+              </>
+            ) : (
+              <>
+                アカウントをお持ちでない方は{' '}
+                <button
+                  onClick={() => toggleMode(true)}
+                  className="text-blue-600 hover:text-blue-500 font-medium underline"
+                >
+                  アカウントを作成
+                </button>
+              </>
+            )}
           </p>
         </div>
       </div>
