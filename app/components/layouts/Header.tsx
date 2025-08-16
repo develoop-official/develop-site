@@ -8,6 +8,7 @@
 import Link from 'next/link';
 import Image from 'next/image';
 import { useState } from 'react';
+import { useAuth } from '@/app/contexts/AuthContext';
 
 /**
  * ヘッダーコンポーネント
@@ -15,6 +16,7 @@ import { useState } from 'react';
  */
 const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const { user, loading, signOut } = useAuth();
 
   /**
    * ハンバーガーメニューの開閉を切り替える
@@ -28,6 +30,19 @@ const Header = () => {
    */
   const closeMenu = () => {
     setIsMenuOpen(false);
+  };
+
+  /**
+   * サインアウト処理
+   */
+  const handleSignOut = async () => {
+    try {
+      await signOut();
+      closeMenu();
+    } catch (error) {
+      console.error('サインアウトエラー:', error);
+      alert('サインアウトに失敗しました。');
+    }
   };
 
   return (
@@ -67,9 +82,23 @@ const Header = () => {
               </div>
             </div>
             <div className="bg-white rounded-full px-6 py-3 shadow-lg">
-              <Link href="/auth/signin" className="text-black hover:text-blue-600 font-medium">
-                ログイン
-              </Link>
+              {user ? (
+                <div className="flex items-center space-x-4">
+                  <Link href="/profile" className="text-black hover:text-blue-600 font-medium">
+                    プロフィール
+                  </Link>
+                  <button
+                    onClick={handleSignOut}
+                    className="text-black hover:text-red-600 font-medium"
+                  >
+                    ログアウト
+                  </button>
+                </div>
+              ) : (
+                <Link href="/auth/signin" className="text-black hover:text-blue-600 font-medium">
+                  ログイン
+                </Link>
+              )}
             </div>
           </div>
 
@@ -148,13 +177,31 @@ const Header = () => {
                   サークルについて
                 </Link>
                 <div className="border-t border-gray-200 pt-4 mt-4">
-                  <Link
-                    href="/auth/signin"
-                    className="block py-3 px-4 text-lg text-black hover:text-blue-600 hover:bg-gray-50 rounded-lg transition-colors"
-                    onClick={closeMenu}
-                  >
-                    ログイン
-                  </Link>
+                  {user ? (
+                    <>
+                      <Link
+                        href="/profile"
+                        className="block py-3 px-4 text-lg text-black hover:text-blue-600 hover:bg-gray-50 rounded-lg transition-colors"
+                        onClick={closeMenu}
+                      >
+                        プロフィール
+                      </Link>
+                      <button
+                        onClick={handleSignOut}
+                        className="block w-full text-left py-3 px-4 text-lg text-black hover:text-red-600 hover:bg-gray-50 rounded-lg transition-colors"
+                      >
+                        ログアウト
+                      </button>
+                    </>
+                  ) : (
+                    <Link
+                      href="/auth/signin"
+                      className="block py-3 px-4 text-lg text-black hover:text-blue-600 hover:bg-gray-50 rounded-lg transition-colors"
+                      onClick={closeMenu}
+                    >
+                      ログイン
+                    </Link>
+                  )}
                 </div>
               </div>
             </div>
