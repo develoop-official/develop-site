@@ -7,18 +7,23 @@
 
 import { createContext, useContext, useEffect, useState } from 'react';
 import { User } from '@supabase/supabase-js';
-import { auth } from '@/lib/supabase';
+import { auth, userProfile } from '@/lib/supabase';
+import type { UserProfile } from '@/types/user';
 
 interface AuthContextType {
   user: User | null;
+  profile: UserProfile | null;
   loading: boolean;
   signOut: () => Promise<void>;
+  refreshProfile: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType>({
   user: null,
+  profile: null,
   loading: true,
   signOut: async () => {},
+  refreshProfile: async () => {},
 });
 
 /**
@@ -26,6 +31,7 @@ const AuthContext = createContext<AuthContextType>({
  */
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
+  const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -33,6 +39,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const getInitialSession = async () => {
       const { user } = await auth.getCurrentUser();
       setUser(user);
+      
+      if (user) {
+        // ユーザーがログインしている場合、プロフィール情報を取得
+        const { data: profileData } = await userProfile.getProfile();
+        setProfile(profileData);
+      }
+      
       setLoading(false);
     };
 
@@ -42,6 +55,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const { data: { subscription } } = auth.onAuthStateChange(
       async (event, session) => {
         setUser(session?.user ?? null);
+        
+        if (session?.user) {
+          // ログイン時にプロフィール情報を取得
+          const { data: profileData } = await userProfile.getProfile();
+          setProfile(profileData);
+        } else {
+          // ログアウト時にプロフィール情報をクリア
+          setProfile(null);
+        }
+        
         setLoading(false);
       }
     );
@@ -51,10 +74,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const signOut = async () => {
     await auth.signOut();
+    setProfile(null);
+  };
+
+  const refreshProfile = async () => {
+    if (user) {
+      const { data: profileData } = await userProfile.getProfile();
+      setProfile(profileData);
+    }
   };
 
   return (
-    <AuthContext.Provider value={{ user, loading, signOut }}>
+    <AuthContext.Provider value={{ user, profile, loading, signOut, refreshProfile }}>
       {children}
     </AuthContext.Provider>
   );
